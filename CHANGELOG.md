@@ -2,6 +2,11 @@
 
 版本遵循 [语义化版本](https://semver.org/lang/zh-CN/)。`0.3.x` 一批（2026-09-08）集中解决 **DSH 0.1.2+ 兼容性**与**提醒可靠性**；`0.3.15`（2026-10-06）把插件抬到 **DSH 0.2.0-rc.2**。
 
+## [0.3.16]（未发布）
+### 修复
+- **完成提醒的语音只念固定短语、没有正文**（0.3.15 引入）：0.3.15 把取文改走 rc2 主路径 `ChatSnapshot.order` + `nodes.get(key)`，但节点判断仍沿用旧事件层的形状 `n.kind === "assistant"` + `n.blocks`。rc2 的 `chat` target 里助手节点是 **`kind: "assistant-step"`**、正文在 **`node.data.blocks`**（`kind: "assistant"` + `node.blocks` 属 trajectory 事件层），两者永不匹配 → `finalTextOf` 恒返回 `""` → 只念「输出完成」。现**两种形状都认**，向后兼容。
+- **「朗读输出」成为真正的开关**：此前它只控制"是否订阅激活 chat target"与截断上限（120 / 400 字），**关着也会把正文前 120 字念出来**，与 README 及设置页提示（"开启后才朗读最后回复"）相反。现在关闭即**只念固定短语**，且**不再为该会话建 conversation binding**（隐私表述与实际行为一致）。
+
 ## [0.3.15]
 ### 修复（DSH 0.2.0-rc.2 适配，破坏性变更）
 - **启动注入 `timer` 会让整个 `dsh web` 起不来**：0.1.7 起客户端 `client/runtime` 被拆掉后，浏览器 Cordis 树里**没有任何行提供 `timer`**（`cordis-plugin-timer` 只剩 host 行）。插件注入它会永久 `pending`，而启动审计（`boot-client.ts` 的 `assertEntriesActive`）把 pending 条目判为失败并抛错 → **整个前端白屏**。现改为**不注入任何服务**，提示条/看门狗/重复提醒/停滞检测改用 `ctx.effect(() => setTimeout/setInterval)` 自持原生定时器（随插件 fiber 释放）。
