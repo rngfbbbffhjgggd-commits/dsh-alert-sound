@@ -64,6 +64,8 @@ After install, open DSH **Settings → 提醒音 / Alerts** and set the sound/vo
 
 There is also a 5th **Stalled/卡住** kind (experimental, **off by default** — enable “Stall detection” first); its default sound is **Low (fault)**.
 
+> **About the Voice sound**: approval / question speak the pending detail (tool name, reason, question text); the **“Output complete” reply body (the last assistant message) requires Read-aloud to be on** — with it off, only the kind name is spoken. The body is capped at 400 characters.
+
 ## Settings persistence
 
 Preferences are stored in `localStorage` under `dsh-alert-sound.v1` (master volume + per-kind `{enabled, sound}` + scope/repeat/system-notification/read-aloud/stall-detection/toast/voice-rate/do-not-disturb/interface-language); uploaded custom sounds live under `dsh-alert-sound.custom.v1`. They survive page reloads and restarts.
