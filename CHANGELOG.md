@@ -11,6 +11,11 @@
 - 「朗读输出」取最后一条助手回复时，**优先走 `ChatSnapshot.order` + `nodes.get(key)`** 这一 rc2 主路径，`legacy.nodes` 退为兜底。
 - 清单：`dsh.client.inject` 里已消失的 `@deepseek-ai/dsh-client-runtime`（及不再使用的 `dsh-client-connection`）替换为**实际消费其服务**的四个包；补 `dsh.manifestVersion: 1` 与 `engines.dsh: ">=0.2.0-rc.2"`。
 
+## [0.3.14]
+### 发布链（无插件行为变更）
+- 发布改用 **GitHub Actions + OIDC trusted publishing + staged publishing**：推 `v*` tag → CI 只把版本提交到 npm 暂存区 → 由维护者用 2FA 批准后才公开（包内代码与 0.3.13 一致）。
+- `publishConfig.registry` 固定为 `registry.npmjs.org`（本机默认 registry 是淘宝镜像）。
+
 ## [0.3.13]
 ### 修复
 - **提示音只有尾音**（老问题）：根因是**输出设备的启动延迟**——提醒间隔久，音频设备处于省电/空闲态，唤醒需 ~150ms，而首音只有 0.18s，于是开头被吞。修法：每次播提示音前排 **200ms 静音预热**再排真音符。

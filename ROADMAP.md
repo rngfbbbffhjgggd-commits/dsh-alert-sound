@@ -14,7 +14,7 @@
 - ✅ **H 插件 UI / 语音 i18n（zh/en + 语言偏好）**
 - ✅ **全部待办已完成**：A–I 各功能均已落地并随 v0.2 / v0.3 发布。
 
-## 现状（v0.3.15，已发布）
+## 现状（v0.3.15）
 - 5 类提醒：需要审批 / 需要回答 / 输出完成 / 发生错误 + **「卡住」**（实验性，需先开「停滞检测」）。
 - 每类：独立启停 + 音色（叮咚/低沉/轻点/警醒/语音/自定义/静音）+ 音量（0–200%）+ 试听。
 - 可选**语音朗读**（中/英文随界面语言，如“需要审批 / Needs approval”）；**语音失败自动改播提示音**（不静音）。
@@ -40,6 +40,11 @@ DSH 0.1.2 起把**挂起交互**从会话列表摘要/会话快照里移出：
 - **`running` 的权威来源**改为 `sessionStatus.running`（list 行只在 Host 列表成员上权威，其余是展示回退）。
 - **没有坏的**（已逐条核对 rc2 源码）：`sessions.list.byId[].running/updatedAt`、`sessions.binding(id).session.getSnapshot().lastAgentError`、`uiConversation.binding(id).target('chat')` 及 `ChatSnapshot.order/nodes`、`settings.section` 与 `shell.overlay` 槽位名与 `slots.register({id,order,label}, Comp)` 选项形状、`__ModuleLoader__.load({id, factory})` 注册格式。
 - **本地开发装法**：`dsh plugin --profile <p> add <绝对路径>`（rc2 的相对路径会被拒），会被装成 **junction 链接**，改代码后**刷新页面即可**，不必重装。
+- **已知取舍与遗留（0.3.15 复审记录，均非阻断）**：
+  - 朗读「最后的回复」取自 `ctx.uiConversation.binding(id).target('chat')`。`binding()` 是 `UiConversation` 服务的公开方法，但**不在文档化的 `IConversation` 门面里**（那是给 React/Slot 用的 `useChat`）。内核若重构这一层，插件会在 `try/catch` 里降级成只念固定短句，不会报错也不会崩。
+  - 「自定义音色」存 localStorage（每类上限 2MB、data URL 膨胀约 ×1.37）→ 5 类合计可能超出常见 5MB 配额，**写入失败被静默吞掉**，刷新后该音色消失。待办：降上限或给出可见提示。
+  - `dsh.client.inject` 列出的 4 个包是"本插件消费其**服务**"的信息性声明（官方对 `inject` 的语义在"仅信息性"与"决定工厂到达"两种说法间并不完全一致）。4 个名字都是 rc2 真实存在的行，缺失时会被静默跳过，无风险。
+  - 设置面板用的是 `var(--color-border, …)` / `var(--color-card-bg, …)`；rc2 的主题 token 已统一为 `--dsw-*`，故这些回退色一直生效（纯观感，功能无碍）。
 
 ---
 
