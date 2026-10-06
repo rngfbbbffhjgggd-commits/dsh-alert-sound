@@ -1,6 +1,15 @@
 # 更新日志 / Changelog
 
-版本遵循 [语义化版本](https://semver.org/lang/zh-CN/)。`0.3.x` 一批（2026-09-08）集中解决 **DSH 0.1.2+ 兼容性**与**提醒可靠性**。
+版本遵循 [语义化版本](https://semver.org/lang/zh-CN/)。`0.3.x` 一批（2026-09-08）集中解决 **DSH 0.1.2+ 兼容性**与**提醒可靠性**；`0.3.15`（2026-10-06）把插件抬到 **DSH 0.2.0-rc.2**。
+
+## [0.3.15]
+### 修复（DSH 0.2.0-rc.2 适配，破坏性变更）
+- **启动注入 `timer` 会让整个 `dsh web` 起不来**：0.1.7 起客户端 `client/runtime` 被拆掉后，浏览器 Cordis 树里**没有任何行提供 `timer`**（`cordis-plugin-timer` 只剩 host 行）。插件注入它会永久 `pending`，而启动审计（`boot-client.ts` 的 `assertEntriesActive`）把 pending 条目判为失败并抛错 → **整个前端白屏**。现改为**不注入任何服务**，提示条/看门狗/重复提醒/停滞检测改用 `ctx.effect(() => setTimeout/setInterval)` 自持原生定时器（随插件 fiber 释放）。
+- **审批/提问提醒全哑**：`ctx.uiSession.pendingInteractions`（0.1.2 起的公开 observable）在 rc2 已变成私有实现，公开面是 **`sessionStatus`**（`HostObservable<Map<SessionId, { running, pendingInteraction, completionUnread }>>`）。现改读/订阅 `sessionStatus`，详情节字段（approval 的 `toolName`/`reason`、question 与 plan-review 的 `questions[]`）不变。
+- **「仅当前会话」范围会完全不响**：rc2 的 `SessionListState` 已无 `current`；该事实改为会话行的 `retainedBy.mainView` 计数（主区域持有引用者即“当前会话”）。
+- `running` 改以 **`sessionStatus.running` 为准**（list 行的 `running` 在 rc2 只是 Host 列表成员的展示回退），避免为不在 Host 列表里的会话误报完成。
+- 「朗读输出」取最后一条助手回复时，**优先走 `ChatSnapshot.order` + `nodes.get(key)`** 这一 rc2 主路径，`legacy.nodes` 退为兜底。
+- 清单：`dsh.client.inject` 里已消失的 `@deepseek-ai/dsh-client-runtime`（及不再使用的 `dsh-client-connection`）替换为**实际消费其服务**的四个包；补 `dsh.manifestVersion: 1` 与 `engines.dsh: ">=0.2.0-rc.2"`。
 
 ## [0.3.13]
 ### 修复

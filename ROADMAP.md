@@ -14,7 +14,7 @@
 - ✅ **H 插件 UI / 语音 i18n（zh/en + 语言偏好）**
 - ✅ **全部待办已完成**：A–I 各功能均已落地并随 v0.2 / v0.3 发布。
 
-## 现状（v0.3，已发布）
+## 现状（v0.3.15，已发布）
 - 5 类提醒：需要审批 / 需要回答 / 输出完成 / 发生错误 + **「卡住」**（实验性，需先开「停滞检测」）。
 - 每类：独立启停 + 音色（叮咚/低沉/轻点/警醒/语音/自定义/静音）+ 音量（0–200%）+ 试听。
 - 可选**语音朗读**（中/英文随界面语言，如“需要审批 / Needs approval”）；**语音失败自动改播提示音**（不静音）。
@@ -32,6 +32,14 @@ DSH 0.1.2 起把**挂起交互**从会话列表摘要/会话快照里移出：
 - **v0.3.4–0.3.5 设置页体验**：朗读说明改写（点明只对「语音」生效）、「发生错误」加“未经实测”免责说明、说明「停滞检测」才会触发第 5 类「卡住」、新增**恢复默认设置**。
 - **v0.3.6–0.3.7 复查修复**：队列释放改为按**实际排程**计时；挂起基线在 `uiSession` 就绪后重建（且**只动 pending、不碰 `running`**，否则会吞掉当轮完成）；槽位注册也改 `ctx.inject(["slots"], …)`。
 - **v0.3.9–0.3.10 语音可靠性**：浏览器 `speechSynthesis` 会**静默丢弃 utterance**（`onstart` 不触发 → 既无声也无报错），故加 **1 秒看门狗 + 各类提示音兜底**（审批→警醒 / 提问→轻点 / 完成→叮咚 / 错误·卡住→低沉）+ 启动 `getVoices()` 预热，并**防重入**（`cancel()` 会再触发 `onerror`，否则兜底音会播两次）。**完成提醒现在一定有声音**。彻底解决需换 TTS 引擎（见 K 项）。
+
+### ⚠️ v0.3.15 兼容性更新（DSH 0.2.0-rc.2）
+- **最要命的一条**：插件曾声明 `inject = ["timer"]`。DSH 0.1.7 起客户端 `client/runtime` 被拆掉后，**浏览器 Cordis 树里再无任何行提供 `timer`**（`cordis-plugin-timer` 只剩 host 行；rc2 的 73 个 `dsh.client` 行里没有任何计时服务提供者）。注入缺失服务会让插件 fiber 永久 `pending`，而 rc2 的启动审计（`boot-client.ts` 的 `assertEntriesActive`）把 pending 条目判为失败并**抛错** → **整个 web 前端白屏**，不是“听不到声音”这种量级。现改为不注入服务 + `ctx.effect(() => setTimeout/setInterval)` 自持定时器（随 fiber 释放）。
+- **挂起交互再次换家**：0.1.2 引入的 `ctx.uiSession.pendingInteractions` 在 rc2 被收回为私有实现，公开面是 **`sessionStatus`**（`HostObservable<Map<SessionId, { running, pendingInteraction, completionUnread }>>`）。现改读/订阅它；详情字段（approval 的 `toolName`/`reason`、question 与 plan-review 的 `questions[]`）不变。
+- **「仅当前会话」范围**：rc2 的 `SessionListState` 去掉了 `current`，改以会话行的 **`retainedBy.mainView`** 计数判定“主区域正在看的会话”。
+- **`running` 的权威来源**改为 `sessionStatus.running`（list 行只在 Host 列表成员上权威，其余是展示回退）。
+- **没有坏的**（已逐条核对 rc2 源码）：`sessions.list.byId[].running/updatedAt`、`sessions.binding(id).session.getSnapshot().lastAgentError`、`uiConversation.binding(id).target('chat')` 及 `ChatSnapshot.order/nodes`、`settings.section` 与 `shell.overlay` 槽位名与 `slots.register({id,order,label}, Comp)` 选项形状、`__ModuleLoader__.load({id, factory})` 注册格式。
+- **本地开发装法**：`dsh plugin --profile <p> add <绝对路径>`（rc2 的相对路径会被拒），会被装成 **junction 链接**，改代码后**刷新页面即可**，不必重装。
 
 ---
 

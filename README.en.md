@@ -24,7 +24,7 @@ Notification sound alerts for the **DeepSeek Harness (dsh) web GUI**. When a ses
 
 ## Requirements
 
-- **DeepSeek Harness `0.1.2` or newer** (`dsh web`) — approval/question detection relies on `uiSession.pendingInteractions`, introduced in 0.1.2; on older versions only the complete/error alerts work.
+- **DeepSeek Harness `0.2.0-rc.2` or newer** (`dsh web`) — approval/question detection relies on rc2's `uiSession.sessionStatus` (the `uiSession.pendingInteractions` observable introduced in 0.1.2 was withdrawn from the public face); on older versions only the complete/error alerts work.
 - A browser with Web Audio (for tones); Web Speech for voice is optional and degrades to a tone
 
 ## Install
@@ -41,10 +41,10 @@ Or install from GitHub (pure JS, no build step, works directly):
 dsh plugin --profile web add github:Machine-126/dsh-alert-sound
 ```
 
-Or from a local checkout:
+Or from a local checkout (**the path must be absolute**; rc2 installs it as a `link:`, so edits need only a page refresh):
 
 ```sh
-dsh plugin --profile web add ./dsh-alert-sound
+dsh plugin --profile web add D:\path\to\dsh-alert-sound
 ```
 
 Restart `dsh web`, then open **Settings → 提醒音 / Alerts** to configure.
@@ -57,9 +57,9 @@ After install, open DSH **Settings → 提醒音 / Alerts** and set the sound/vo
 
 | Kind | Trigger | Default sound | Toast |
 |---|---|---|---|
-| Needs approval (需要审批) | `uiSession.pendingInteractions` has `kind === 'approval'` for the session | Alert (警醒, square triple) | amber |
-| Needs answer (需要回答) | `uiSession.pendingInteractions` has `kind === 'question'` (incl. plan-review) | Tap (轻点, quick taps) | purple |
-| Output complete (输出完成) | session-list `running` true→false | Ding-dong (叮咚, ascending two-note) | green |
+| Needs approval (需要审批) | `uiSession.sessionStatus` has `pendingInteraction.kind === 'approval'` for the session | Alert (警醒, square triple) | amber |
+| Needs answer (需要回答) | same source, `kind === 'question'` (incl. plan-review) | Tap (轻点, quick taps) | purple |
+| Output complete (输出完成) | the session's `running` goes true→false (authoritative source: `sessionStatus.running`) | Ding-dong (叮咚, ascending two-note) | green |
 | Error (发生错误) | a turn errors during a run (`lastAgentError` changes) | Low (低沉, descending sawtooth) | red |
 
 There is also a 5th **Stalled/卡住** kind (experimental, **off by default** — enable “Stall detection” first); its default sound is **Low (fault)**.
@@ -70,7 +70,7 @@ Preferences are stored in `localStorage` under `dsh-alert-sound.v1` (master volu
 
 ## Privacy
 
-All processing stays in the browser. The plugin reads, **in memory only**: the session list's `running` / `updatedAt`; `uiSession.pendingInteractions` (the pending kind plus tool name, reason and question text); the session snapshot's `lastAgentError` (failed detection); and — **only when “Read-aloud” is on** — the last assistant reply text from the conversation view (for speaking it). None of it is stored or sent anywhere. The only persisted data is your own **settings** (`localStorage` `dsh-alert-sound.v1`; custom sounds in `dsh-alert-sound.custom.v1`). The plugin makes **no network requests**, sends nothing to any server, uses no analytics/telemetry, and plays sounds / voices through browser-local Web Audio and Speech Synthesis.
+All processing stays in the browser. The plugin reads, **in memory only**: `uiSession.sessionStatus` (`running`, the pending kind plus tool name, reason and question text); the session list row's `updatedAt` and `retainedBy` (to decide the “current session”; `running` only as a fallback); the session snapshot's `lastAgentError` (failed detection); and — **only when “Read-aloud” is on** — the last assistant reply text from the conversation view (for speaking it). None of it is stored or sent anywhere. The only persisted data is your own **settings** (`localStorage` `dsh-alert-sound.v1`; custom sounds in `dsh-alert-sound.custom.v1`). The plugin makes **no network requests**, sends nothing to any server, uses no analytics/telemetry, and plays sounds / voices through browser-local Web Audio and Speech Synthesis.
 
 ## Project layout
 
@@ -84,7 +84,7 @@ All processing stays in the browser. The plugin reads, **in memory only**: the s
 
 ## Credits
 
-The **detection approach** (watching the session list's `running` and `uiSession.pendingInteractions`) follows the idea used by [dsh-session-notification](https://github.com/dingyi222666/dsh-session-notification) (BSD-3-Clause); the “task-completion chime” concept follows [dsh-chime](https://github.com/HtO404/dsh-chime) (Apache-2.0). The **bundle/client-plugin structure** follows the official dsh docs (`docs/user/develop/basic/publish.md`) and the layouts of [dsh-plugin-tts](https://github.com/1624318455/dsh-plugin-tts), [dsh-status-rotator](https://github.com/01Virex/dsh-status-rotator) and [dsh-web-ui-notify](https://github.com/omdsh-dev/dsh-web-ui-notify).
+The **detection approach** (watching `uiSession.sessionStatus`'s `running` and `pendingInteraction`) follows the idea used by [dsh-session-notification](https://github.com/dingyi222666/dsh-session-notification) (BSD-3-Clause); the “task-completion chime” concept follows [dsh-chime](https://github.com/HtO404/dsh-chime) (Apache-2.0). The **bundle/client-plugin structure** follows the official dsh docs (`docs/user/develop/basic/publish.md`) and the layouts of [dsh-plugin-tts](https://github.com/1624318455/dsh-plugin-tts), [dsh-status-rotator](https://github.com/01Virex/dsh-status-rotator) and [dsh-web-ui-notify](https://github.com/omdsh-dev/dsh-web-ui-notify).
 
 The **tones are original** (waveforms/frequencies designed for this plugin); no audio constants were copied from the above projects. Source is an independent implementation.
 

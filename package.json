@@ -1,6 +1,6 @@
 {
   "name": "@machine-126/dsh-alert-sound",
-  "version": "0.3.14",
+  "version": "0.3.15",
   "scripts": {
     "prepublishOnly": "node --check lib/index.mjs && node --check lib/client.js"
   },
@@ -38,20 +38,25 @@
     "LICENSE"
   ],
   "dsh": {
+    "manifestVersion": 1,
     "bundle": {
       "patch": "./cordis.patch.yml"
     },
     "client": {
       "platform": "web",
       "inject": [
-        "@deepseek-ai/dsh-client-runtime",
-        "@deepseek-ai/dsh-client-connection",
-        "@deepseek-ai/dsh-client-ui-slots"
+        "@deepseek-ai/dsh-api-session-controller",
+        "@deepseek-ai/dsh-client-ui-session",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-renderer"
       ]
     }
   },
+  "engines": {
+    "dsh": ">=0.2.0-rc.2"
+  },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/cordis": "^4.0.4",
     "react": "^18.2.0"
   },
   "keywords": [
